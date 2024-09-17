@@ -17,7 +17,7 @@ PRINT_TASK() {
 PRINT_TASK "[TASK: Install infrastructure rpm]"
 
 # List of RPM packages to install
-packages=("wget" "net-tools" "vim" "podman" "bind-utils" "bind" "haproxy" "git" "bash-completion" "jq" "nfs-utils" "httpd" "httpd-tools" "skopeo" "httpd-manual")
+packages=("wget" "net-tools" "vim" "podman" "bind-utils" "bind" "haproxy" "git" "bash-completion" "jq" "nfs-utils" "httpd" "httpd-tools" "skopeo" "conmon" "httpd-manual")
 
 # Install the RPM package and return the execution result
 for package in "${packages[@]}"; do
@@ -76,9 +76,16 @@ install_tar_gz() {
 }
 
 # Install .tar.gz tools
+rhel_version=$(rpm -E %{rhel})
+if [ $rhel_version -eq 9 ]; then
+    oc_mirror_url="https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable/oc-mirror.tar.gz"
+else
+    oc_mirror_url="https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.14.10/oc-mirror.tar.gz"
+fi
+
 install_tar_gz "openshift-install" "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OCP_RELEASE_VERSION}/openshift-install-linux.tar.gz"
 install_tar_gz "openshift-client" "https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable/openshift-client-linux.tar.gz"
-install_tar_gz "oc-mirror" "https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable/oc-mirror.tar.gz"
+install_tar_gz "oc-mirror" "$oc_mirror_url"
 
 # Function to check command success and display appropriate message
 run_command() {
@@ -507,8 +514,7 @@ ns1     IN      A       ${DNS_SERVER_IP}
 helper  IN      A       ${DNS_SERVER_IP}
 helper.ocp4     IN      A       ${DNS_SERVER_IP}
 ;
-; The api identifies the IP of your load balancer.
-;
+; The api identifies the IP of load balancer.
 $(format_dns_entry "api.${CLUSTER_NAME}.${BASE_DOMAIN}." "${API_IP}")
 $(format_dns_entry "api-int.${CLUSTER_NAME}.${BASE_DOMAIN}." "${API_INT_IP}")
 ;
@@ -565,7 +571,7 @@ cat << EOF > "$reverse_zone_input_file"
 ; The syntax is "last octet" and the host must have an FQDN
 ; with a trailing dot.
 ;
-; The api identifies the IP of your load balancer.
+; The api identifies the IP of load balancer.
 ${API_IP}                IN      PTR     api.${CLUSTER_NAME}.${BASE_DOMAIN}.
 ${API_INT_IP}            IN      PTR     api-int.${CLUSTER_NAME}.${BASE_DOMAIN}.
 ;

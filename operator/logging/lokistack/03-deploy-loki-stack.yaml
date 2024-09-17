@@ -5,10 +5,10 @@ metadata:
   namespace: openshift-logging
 spec:
   size: 1x.extra-small
-  storageClassName: ocs-storagecluster-cephfs
+  storageClassName: ${STORAGE_CLASS_NAME}
   storage:
     secret:
-      name: ${OBC_NAME}-credentials
+      name: ${BUCKET_NAME}-credentials
       type: s3
   tenants:
     mode: openshift-logging    
@@ -20,6 +20,8 @@ metadata:
   namespace: openshift-logging
 spec:
   managementState: Managed
+  visualization:
+    type: ocp-console
   logStore:
     type: lokistack
     lokistack:

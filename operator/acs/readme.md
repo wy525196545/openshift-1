@@ -3,7 +3,7 @@
 * Install the Operator using the default namespace
   ```
   export CHANNEL_NAME="stable"
-  export CATALOG_SOURCE_NAME="redhat-operator-index"
+  export CATALOG_SOURCE_NAME="redhat-operators"
   curl -s https://raw.githubusercontent.com/pancongliang/openshift/main/operator/acs/01-operator.yaml | envsubst | oc create -f -
 
   sleep 6
@@ -59,12 +59,28 @@
   ```  
 * Logout and refresh your browser. OpenShift provider will be available for you to login with OpenShift's user account
 
+
+### Installing the roxctl CLI
+
+* Installing the roxctl CLI
+  ```
+  arch="$(uname -m | sed "s/x86_64//")"; arch="${arch:+-$arch}"
+  curl -f -o roxctl "https://mirror.openshift.com/pub/rhacs/assets/4.3.1/bin/Linux/roxctl${arch}"
+  chmod +x roxctl
+  mv ./roxctl /usr/local/bin/
+  ```
+
 ### Add an OpenShift cluster to RHACS
 
-* Get Authentication Token
+* Creating Init Bundle
   ```
   ACS Console Platform → Configuration → Integrations → Cluster Init Bundle
   → Generate bundle → <cluster_init_bundle.yaml> → Generate → Download Kubernetes Secret File
+
+  or
+  
+  export ROX_CENTRAL_ADDRESS=$(oc get route central -n stackrox -o jsonpath='{.spec.host}'):443
+  roxctl -e "$ROX_CENTRAL_ADDRESS" central init-bundles generate cluster_init_bundle.yaml --output-secrets cluster_init_bundle.yaml
   ```
   
 * Creating resources by using the init bundle
@@ -98,16 +114,6 @@
   oc get daemonsets.apps  -n stackrox
   NAME        DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
   collector   6         6         6       6            6           <none>          13m
-  ```
-
-### Installing the roxctl CLI
-
-* Installing the roxctl CLI
-  ```
-  arch="$(uname -m | sed "s/x86_64//")"; arch="${arch:+-$arch}"
-  curl -f -o roxctl "https://mirror.openshift.com/pub/rhacs/assets/4.3.1/bin/Linux/roxctl${arch}"
-  chmod +x roxctl
-  mv ./roxctl /usr/local/bin/
   ```
 
 ### Enabling offline mode and updating Scanner and kernel support packages

@@ -23,4 +23,4 @@ spec:
   installPlanApproval: "Manual"
   name: openshift-gitops-operator 
   source: ${CATALOG_SOURCE_NAME}
-  sourceNamespace: openshift-marketplace 
+  sourceNamespace: openshift-marketplace

@@ -11,9 +11,6 @@
   oc patch installplan $(oc get ip -n openshift-gitops-operator -o=jsonpath='{.items[?(@.spec.approved==false)].metadata.name}') -n openshift-gitops-operator --type merge --patch '{"spec":{"approved":true}}'
 
   oc get ip -n openshift-gitops-operator
-
-  oc get pods -n openshift-gitops
-  oc get pods -n openshift-gitops-operator
   ```
 
 ### Access control and user management
@@ -35,8 +32,8 @@
 
 * Create test namespaces that host the application load and label them to indicate that the projects are managed by openshift-gitops.
   ```
-  oc new-project spring-dev
-  oc label namespace spring-dev argocd.argoproj.io/managed-by=openshift-gitops
+  oc new-project spring-petclinic
+  oc label namespace spring-petclinic argocd.argoproj.io/managed-by=openshift-gitops
   ```
 
 * Get the Argo CD UI url with the following commend, then select the `LOG IN VIA OPENSHIFT` option and log in with a user in the "cluster-admins" group.
@@ -44,15 +41,21 @@
   oc get route openshift-gitops-server -o jsonpath='{.spec.host}' -n openshift-gitops
   ```
   
-* Create spring-dev AppProject.
+* Create spring-petclinic AppProject.
   ```
   cat << EOF | oc apply -f -
   apiVersion: argoproj.io/v1alpha1
   kind: AppProject
   metadata:
-    name: spring-dev
+    name: spring-petclinic
     namespace: openshift-gitops
   spec:
+    clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+    destinations:
+    - namespace: '*'
+      server: '*'
     sourceRepos:
     - '*'
   EOF
@@ -60,9 +63,9 @@
 
   ```
   oc get appproject -n openshift-gitops
-  NAME          AGE
-  default       12h
-  spring-dev    9m17s
+  NAME               AGE
+  default            19h
+  spring-petclinic   6s
   ```
 
 * Create application
@@ -71,14 +74,16 @@
   apiVersion: argoproj.io/v1alpha1
   kind: Application
   metadata:
-    name: spring-dev-app1
+    name: app-spring-petclinic
     namespace: openshift-gitops
   spec:
     destination:
-      namespace: spring-dev
+      namespace: spring-petclinic
       server: https://kubernetes.default.svc
-    project: spring-dev
+    project: spring-petclinic
     source:
+      directory:
+        recurse: true
       repoURL: https://github.com/siamaksade/openshift-gitops-getting-started
       targetRevision: HEAD
       path: app
@@ -90,10 +95,10 @@
 
   ```
   oc get applications -n openshift-gitops
-  NAME               SYNC STATUS   HEALTH STATUS
-  spring-dev-app1    Synced        Healthy
+  NAME                   SYNC STATUS   HEALTH STATUS
+  app-spring-petclinic   Synced        Healthy
 
-  oc get po -n spring-dev
+  oc get po -n spring-petclinic
   NAME                                READY   STATUS    RESTARTS   AGE
-  spring-petclinic-566fd65d6c-mj6dg   1/1     Running   0          78m
+  spring-petclinic-66864bf846-c5xdk   1/1     Running   0          3m48s
   ```

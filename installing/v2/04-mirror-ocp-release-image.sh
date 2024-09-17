@@ -32,15 +32,18 @@ echo "${REDHAT_PULL_SECRET}" > "${PULL_SECRET}"
 run_command "[create a temporary file to store the pull secret]"
 
 # Login to the registry
+rm -rf $XDG_RUNTIME_DIR/containers
+podman login -u "$REGISTRY_ID" -p "$REGISTRY_PW" "${REGISTRY_HOSTNAME}.${BASE_DOMAIN}:8443" &>/dev/null
 podman login -u "$REGISTRY_ID" -p "$REGISTRY_PW" --authfile "${PULL_SECRET}" "${REGISTRY_HOSTNAME}.${BASE_DOMAIN}:8443" &>/dev/null
 run_command "[add authentication information to pull-secret]"
 
 # Save the PULL_SECRET file either as $XDG_RUNTIME_DIR/containers/auth.json
 cat ${PULL_SECRET} | jq . > ${XDG_RUNTIME_DIR}/containers/auth.json
-run_command "Save the PULL_SECRET file either as $XDG_RUNTIME_DIR/containers/auth.json]"
+run_command "[save the PULL_SECRET file either as $XDG_RUNTIME_DIR/containers/auth.json]"
 
 # Create ImageSetConfiguration directory
-mkdir ${IMAGE_SET_CONFIGURATION_PATH}
+rm -rf ${IMAGE_SET_CONFIGURATION_PATH} &>/dev/null
+mkdir ${IMAGE_SET_CONFIGURATION_PATH} &>/dev/null
 run_command "[create ${IMAGE_SET_CONFIGURATION_PATH} directory]"
 
 # Create ImageSetConfiguration file
